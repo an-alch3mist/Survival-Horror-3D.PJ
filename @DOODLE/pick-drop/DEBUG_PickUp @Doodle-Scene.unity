@@ -170,7 +170,7 @@ MonoBehaviour:
   grabbableLayer:
     serializedVersion: 2
     m_Bits: 256
-  holdDistance: 2
+  holdDistance: 2.4
   minHoldDistance: 1
   maxHoldDistance: 5
   springStrength: 500
