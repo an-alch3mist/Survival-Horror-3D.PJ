@@ -2,7 +2,7 @@
 
 /// <summary>
 /// First-person physics-based object grabbing system with spring mechanics.
-/// GLITCH-FREE VERSION - Fixes jittering when moving camera
+/// GLITCH-FREE VERSION with CONTROLLED DROP VELOCITY
 /// Compatible with Unity 6000.3 and Unity Starter Assets First Person Controller
 /// </summary>
 public class FirstPersonGrabber : MonoBehaviour
@@ -40,19 +40,34 @@ public class FirstPersonGrabber : MonoBehaviour
 	[Tooltip("Maximum velocity of grabbed object")]
 	public float maxVelocity = 10f;
 
+	[Header("Drop/Throw Velocity Control")]
+	[Tooltip("Enable throwing objects on release")]
+	public bool allowThrowing = true;
+
+	[Tooltip("Horizontal throw force multiplier (forward direction)")]
+	[Range(0f, 20f)]
+	public float horizontalThrowForce = 2f;
+
+	[Tooltip("Vertical throw force multiplier (upward direction)")]
+	[Range(0f, 20f)]
+	public float verticalThrowForce = 1f;
+
+	[Tooltip("Inherit camera movement velocity when dropping")]
+	public bool inheritCameraVelocity = true;
+
+	[Tooltip("Camera velocity multiplier (how much camera movement affects throw)")]
+	[Range(0f, 2f)]
+	public float cameraVelocityMultiplier = 0.3f;
+
+	[Tooltip("Maximum throw velocity (prevents extreme speeds)")]
+	public float maxThrowVelocity = 15f;
+
 	[Header("Rotation Settings")]
 	[Tooltip("Enable rotation with mouse scroll")]
 	public bool allowRotation = true;
 
 	[Tooltip("Rotation speed")]
 	public float rotationSpeed = 100f;
-
-	[Header("Throw Settings")]
-	[Tooltip("Enable throwing objects on release")]
-	public bool allowThrowing = true;
-
-	[Tooltip("Throw force multiplier")]
-	public float throwForce = 5f;
 
 	[Header("Visual Feedback")]
 	[Tooltip("Show raycast debug line")]
@@ -169,18 +184,17 @@ public class FirstPersonGrabber : MonoBehaviour
 		targetPositionVelocity = Vector3.zero;
 
 		// Store original physics properties
-		originalDrag = rb.drag;
-		originalAngularDrag = rb.angularDrag;
+		originalDrag = rb.linearDamping;
+		originalAngularDrag = rb.angularDamping;
 
 		// Increase drag for more stable holding
-		rb.drag = dampingFactor;
-		rb.angularDrag = dampingFactor * 0.5f;
+		rb.linearDamping = dampingFactor;
+		rb.angularDamping = dampingFactor * 0.5f;
 
 		// IMPORTANT: Enable interpolation on the rigidbody for smooth movement
 		if (rb.interpolation == RigidbodyInterpolation.None)
 		{
 			rb.interpolation = RigidbodyInterpolation.Interpolate;
-			Debug.Log("Enabled Interpolation on " + rb.gameObject.name + " - this prevents jittering!");
 		}
 
 		// Set initial hold distance based on grab distance
@@ -220,7 +234,7 @@ public class FirstPersonGrabber : MonoBehaviour
 		Vector3 springForce = positionDelta * springStrength;
 
 		// 3. Damping Force: Opposes velocity to prevent oscillation
-		Vector3 dampingForce = -grabbedRigidbody.velocity * dampingFactor;
+		Vector3 dampingForce = -grabbedRigidbody.linearVelocity * dampingFactor;
 
 		// 4. Combined Force
 		Vector3 totalForce = springForce + dampingForce;
@@ -229,9 +243,9 @@ public class FirstPersonGrabber : MonoBehaviour
 		grabbedRigidbody.AddForce(totalForce, ForceMode.Force);
 
 		// Clamp velocity to prevent extreme speeds
-		if (grabbedRigidbody.velocity.magnitude > maxVelocity)
+		if (grabbedRigidbody.linearVelocity.magnitude > maxVelocity)
 		{
-			grabbedRigidbody.velocity = grabbedRigidbody.velocity.normalized * maxVelocity;
+			grabbedRigidbody.linearVelocity = grabbedRigidbody.linearVelocity.normalized * maxVelocity;
 		}
 	}
 
@@ -257,22 +271,52 @@ public class FirstPersonGrabber : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Releases the currently grabbed object
+	/// Releases the currently grabbed object with controlled velocity
 	/// </summary>
 	void ReleaseObject()
 	{
 		if (grabbedRigidbody == null) return;
 
 		// Restore original physics properties
-		grabbedRigidbody.drag = originalDrag;
-		grabbedRigidbody.angularDrag = originalAngularDrag;
+		grabbedRigidbody.linearDamping = originalDrag;
+		grabbedRigidbody.angularDamping = originalAngularDrag;
 
 		// Apply throw velocity if enabled
 		if (allowThrowing)
 		{
-			Vector3 throwVelocity = playerCamera.transform.forward * throwForce;
-			throwVelocity += cameraVelocity; // Add camera movement
-			grabbedRigidbody.velocity = throwVelocity;
+			// === CONTROLLED DROP VELOCITY ===
+
+			// 1. Calculate base throw direction
+			Vector3 forwardDirection = playerCamera.transform.forward;
+			Vector3 upDirection = Vector3.up;
+
+			// 2. Separate horizontal and vertical components
+			Vector3 horizontalVelocity = new Vector3(forwardDirection.x, 0f, forwardDirection.z).normalized * horizontalThrowForce;
+			Vector3 verticalVelocity = upDirection * verticalThrowForce;
+
+			// 3. Combine throw velocities
+			Vector3 throwVelocity = horizontalVelocity + verticalVelocity;
+
+			// 4. Add camera movement if enabled (scaled down)
+			if (inheritCameraVelocity)
+			{
+				throwVelocity += cameraVelocity * cameraVelocityMultiplier;
+			}
+
+			// 5. Clamp to maximum throw velocity
+			if (throwVelocity.magnitude > maxThrowVelocity)
+			{
+				throwVelocity = throwVelocity.normalized * maxThrowVelocity;
+			}
+
+			// 6. Apply the controlled velocity
+			grabbedRigidbody.linearVelocity = throwVelocity;
+		}
+		else
+		{
+			// If throwing disabled, just let object drop with current physics
+			// You can optionally zero out velocity here for a clean drop
+			// grabbedRigidbody.velocity = Vector3.zero;
 		}
 
 		// Clear reference
@@ -309,8 +353,8 @@ public class FirstPersonGrabber : MonoBehaviour
 	{
 		if (grabbedRigidbody != null)
 		{
-			grabbedRigidbody.drag = originalDrag;
-			grabbedRigidbody.angularDrag = originalAngularDrag;
+			grabbedRigidbody.linearDamping = originalDrag;
+			grabbedRigidbody.angularDamping = originalAngularDrag;
 			grabbedRigidbody = null;
 		}
 	}
