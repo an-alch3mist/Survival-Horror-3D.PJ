@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: HighlightPlusRenderPassFeature
   m_EditorClassIdentifier: Assembly-CSharp::HighlightPlus.HighlightPlusRenderPassFeature
   m_Active: 1
-  renderPassEvent: 600
+  renderPassEvent: 500
   clearStencil: 0
   previewInEditMode: 1
   showInPreviewCamera: 1
