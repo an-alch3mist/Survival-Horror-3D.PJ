@@ -117,3 +117,13 @@ scene = Scene
 
 ```
 
+```sceneGameObject-hierarchy
+=== Component Abbreviations ===
+dmc = MeshFilter | MeshRenderer
+bc = BoxCollider
+================================
+
+./Cube (1) with gradient/(scale:1.0 | dmc, bc, HighlightEffect, HighlightTrigger)
+
+```
+
