@@ -1,5 +1,4 @@
 {
-    "gameTime": 1435.8389892578125,
     "HISTORY": [
         "DEBUG_PickUp @Doodle-Scene: 196.2747",
         "selectOutlineEffect --> 20.0864",
@@ -30,6 +29,19 @@
         "selectOutlineEffect --> 7.468358",
         "selectOutlineEffect --> 7.494596",
         "selectOutlineEffect --> 5.775224",
-        "selectOutlineEffect --> 9.459208"
-    ]
+        "selectOutlineEffect --> 9.459208",
+        "DEBUG_PickUp @Doodle-Scene: 48.51325",
+        "DEBUG_PickUp @Doodle-Scene: 13.87799",
+        "DEBUG_PickUp @Doodle-Scene: 33.18702",
+        "DEBUG_PickUp @Doodle-Scene: 42.1479",
+        "DEBUG_PickUp @Doodle-Scene: 24.51342",
+        "DEBUG_PickUp @Doodle-Scene 1: 39.03314",
+        "DEBUG_PickUp @Doodle-Scene 1: 160.348",
+        "DEBUG_PickUp @Doodle-Scene 1: 56.46902",
+        "DEBUG_PickUp @Doodle-Scene 1: 9.442647",
+        "DEBUG_PickUp @Doodle-Scene 1: 25.43268",
+        "DEBUG_PickUp @Doodle-Scene 1: 3.395129",
+        "DEBUG_PickUp @Doodle-Scene 1: 19.41208"
+    ],
+    "totalGameTime": 475.7723083496094
 }
